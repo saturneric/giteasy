@@ -41,7 +41,7 @@ class Git(ssh.SSH):
                     print("Create directory.")
                 else:
                     raise ValueError(stderr)
-            self.base_path = [True, "{0}/{1}".format(self.path, "giteasy")]
+            self.base_path = [True, "{0}{1}".format(self.path, "giteasy")]
         else:
             raise ValueError("Home Path Abnormal")
 
@@ -67,13 +67,27 @@ class Git(ssh.SSH):
         else:
             raise UnboundLocalError("Init Base First")
 
+    def clone_project(self):
+        os.chdir(self.local_path)
+        os.popen("git clone ssh://{0}@{1}:{2}/{3}/.git".format(self.user, self.hostname, self.base_path[1],
+                                                               self.fix_name))
+
     def init_project_local(self, name):
-        cmd = self.fix_cmd
-        cmd += "mkdir {0};".format(name)
-        cmd += "git init;"
-        cmd = "git config --global user.email \"{0}\";".format(self.git_email)
-        cmd += "git config --global user.name \"{0}\";".format(self.git_user)
+        os.chdir(self.local_path)
+        try:
+            os.mkdir(name)
+        except FileExistsError:
+            os.chdir(os.path.join(self.local_path, name))
+            raise FileExistsError("Project Already Exist.")
+        os.chdir(os.path.join(self.local_path, name))
+        cmd = "git init"
         os.popen(cmd)
+
+    def global_init_local(self):
+        cmd = "git config --global user.email \"{0}\"".format(self.git_email)
+        print(os.popen(cmd).read())
+        cmd = "git config --global user.name \"{0}\"".format(self.git_user)
+        print(os.popen(cmd).read())
 
     def update_projects(self):
         if self.base_path[0]:
@@ -104,9 +118,8 @@ class Git(ssh.SSH):
         os.chdir(self.local_path)
 
     def add_remote(self, name="origin"):
-        os.popen(
-            "git remote add {3} ssh://{0}@{1}:{2}/{4}/.git".format(self.user, self.hostname, self.base_path[1], name,
-                                                                   self.fix_name))
+        os.popen("git remote add {3} ssh://{0}@{1}:{2}/{4}/.git".format(self.user, self.hostname, self.base_path[1],
+                                                                        name, self.fix_name))
         self.remotes[name] = {"name": name,
                               "url": "ssh://{0}@{1}:{2}/{3}/.git".format(self.user, self.hostname, self.base_path[1],
                                                                          self.fix_name)}
@@ -119,11 +132,16 @@ class Git(ssh.SSH):
         ret_code = re.compile(r"[\t, ]")
         for remote in os.popen("git remote -v").readlines():
             results = ret_code.split(remote)
-            for item in results:
-                if item[0] not in self.remotes.keys():
-                    self.remotes[item[0]] = {"name": item[0], "url": item[1]}
+            print(results)
+            results = list(results)
+            if len(results) > 1:
+                for item in results:
+                    if item[0] not in self.remotes.keys():
+                        self.remotes[results[0]] = {"name": results[0], "url": results[1]}
 
     def push_remote(self, name, branch):
+        print(self.projects[self.fix_name]["branch"])
+        print(self.projects[self.fix_name])
         if branch in self.projects[self.fix_name]["branch"] and name in self.remotes.keys():
             os.popen("git push {0} {1}".format(name, branch))
         else:
@@ -135,13 +153,13 @@ class Git(ssh.SSH):
         else:
             raise ValueError("Remote Error")
 
-    def fix(self, name):
+    def fix_project(self, name):
         if name in self.projects_list:
             self.fix_name = name
             stdout, stderr = self.run("cd {0}".format(self.projects[name]["path"]))
             if self.check_error(stderr):
-                print("Fixed.")
                 self.fix_cmd = "cd {0}".format(self.projects[name]["path"]) + ";"
+                os.chdir(os.path.join(self.local_path, self.fix_name))
             else:
                 raise ValueError("Project Path Abnormal")
 
@@ -155,10 +173,21 @@ class Git(ssh.SSH):
         else:
             raise UnboundLocalError("Init Base First")
 
+    def commit_local(self, message):
+        if self.base_path[0]:
+            os.popen("git commit --message={0}".format(message))
+        else:
+            raise UnboundLocalError("Init Base First")
+
+    @staticmethod
+    def add():
+        os.popen("git add *")
+
     def get_branch(self):
-        if self.base_path[0] and self.fix_name is None:
+        if self.base_path[0] and self.fix_name is not None:
             stdout, stderr = self.run(self.fix_cmd + "git branch")
             if self.check_error(stderr):
+                self.projects[self.fix_name]["branch"] = []
                 reform = re.compile("\w+")
                 for branch in stdout:
                     branch_name = reform.search("*master").group().strip('\n')
@@ -182,17 +211,15 @@ class Git(ssh.SSH):
 if __name__ == "__main__":
     compute = Git("compute.bktus.com", "/home/git", "git", "123456")
     compute.global_init(git_user="saturneric", git_email="eric.bktu@gmail.com")
+    compute.global_init_local()
     compute.base_init()
     # compute.create_project("lcs")
     compute.update_projects()
     compute.list_projects()
-    compute.fix("lcs")
-
-    # compute.get_branch("lcs")
-    compute.set_local("C:/Users/Saturneric/Documents/Code/")
-    compute.init_project_local("test")
-    # compute.add_remote();
-    # compute.get_remote()
-    # compute.get_branch()
-    # compute.list_branch()
-    print(compute.projects)
+    compute.fix_project("lcs")
+    compute.get_branch()
+    compute.set_local("C:\\Users\\Saturneric\\Documents\\Code\\")
+    # compute.init_project_local("test")
+    compute.add_remote()
+    compute.get_remote()
+    compute.list_branch()

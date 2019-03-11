@@ -10,22 +10,26 @@ class Key(ssh.SSH):
         self.connect(5)
         self.pub_key = None
         self.keygen = None
+        self.local_path = "C:\\Users\\Saturneric\\"
+        self.public_key_path = self.local_path+".ssh/id_rsa.pub"
+        self.public_key = None
 
     def add_key(self):
-        self.run("echo \"{0}\" >> ~/.ssh/authorized_keys".format(self.pub_key))
+        self.run("echo \"{0}\" >> ~/.ssh/authorized_keys".format(self.public_key))
 
-    def create_key(self):
-        ret_code = subprocess.Popen(["ssh-keygen", "-b 4096", "-t rsa"], shell=True,
+    @staticmethod
+    def create_key():
+        ret_code = subprocess.Popen(["ssh-keygen", "-b 4096"], shell=True,
                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, stderr = ret_code.communicate(input=b"\ny \n \n \n")
-        self.get_key()
+        stdout, stderr = ret_code.communicate(input=b"\n \n \n \n")
 
     def get_key(self):
-        self.pub_key = os.popen("cat ~/.ssh/id_rsa.pub").read()
+        self.public_key = open(self.public_key_path, 'r').readline()
 
 
 if __name__ == "__main__":
     new_key = Key("compute.bktus.com", "/home/git", "git", "123456", ssh_key=False)
     # new_key.create_key()
-    # new_key.get_key()
-    # new_key.add_key()
+    new_key.get_key()
+    print(new_key.public_key)
+    new_key.add_key()
