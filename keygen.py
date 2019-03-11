@@ -10,7 +10,7 @@ class Key(ssh.SSH):
         self.connect(5)
         self.pub_key = None
         self.keygen = None
-        self.local_path = "C:\\Users\\Saturneric\\"
+        self.local_path = "/Users/huyibing/"
         self.public_key_path = self.local_path+".ssh/id_rsa.pub"
         self.public_key = None
 
