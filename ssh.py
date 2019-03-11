@@ -1,26 +1,47 @@
-import server
-import subprocess
-import os
-
-class key(server.ssh):
-    def __init__(self,hostname, path, user, passwd=None, sshkey=False):
-        super().__init__(hostname=hostname, path=path, user=user, passwd=passwd, sshkey=sshkey)
-        self.connect(5);
-
-    def add_key(self):
-        self.run("echo \"{0}\" >> ~/.ssh/authorized_keys".format(self.pub_key))
-
-    def create_key(self):
-        retcode = subprocess.Popen(["ssh-keygen", "-b 4096", "-t rsa"], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, stderr = retcode.communicate(input=b"\ny \n \n \n")
-
-    def get_key(self):
-        self.pub_key = os.popen("cat ~/.ssh/id_rsa.pub").read()
+import paramiko
 
 
+class SSH(object):
+    ssh = paramiko.SSHClient();
 
+    def __init__(self, hostname, path, user, passwd=None, ssh_key=False):
+        self.hostname = hostname
+        self.path = path
+        self.user = user
+        self.ssh_key = ssh_key
 
-newkey = key("compute.bktus.com", "/home/git", "git", "123456",sshkey=False);
-#newkey.create_key();
-#newkey.get_key();
-#newkey.add_key();
+        if ssh_key:
+            self.passwd = None
+            self.key = paramiko.RSAKey.from_private_key_file('/Users/huyibing/.ssh/id_rsa')
+        else:
+            self.passwd = passwd
+
+        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    def close(self):
+        self.ssh.close()
+
+    def run(self, cmd):
+        print("CMD:", cmd)
+        stdin, stdout, stderr = self.ssh.exec_command(cmd)
+
+        stdout = list(stdout)
+        stderr = list(stderr)
+        return stdout, stderr
+
+    @staticmethod
+    def check_error(stderr):
+        if len(stderr) == 0:
+            return True
+        else:
+            return False
+
+    def connect(self, timeout):
+        if self.ssh_key:
+            self.ssh.connect(hostname=self.hostname, port=22, username=self.user, pkey=self.key, timeout=timeout)
+        else:
+            self.ssh.connect(hostname=self.hostname, port=22, username=self.user, password=self.passwd,
+                             timeout=timeout)
+
+    def __del__(self):
+        self.close()
