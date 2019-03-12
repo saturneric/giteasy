@@ -29,6 +29,10 @@ class Git(ssh.SSH):
         self.fix_name = None
         self.git_user = None
         self.git_email = None
+        self.ssh_user = user
+        self.ssh_hostname = hostname
+        self.passwd = passwd
+        self.path = path
 
     def global_init(self, git_user, git_email):
         self.git_user = git_user
@@ -70,8 +74,8 @@ class Git(ssh.SSH):
                 stdout, stderr = self.run("mkdir {0}/{1}.git".format(self.base_path[1], name))
                 if self.check_error(stderr):
                     print("Succeed In Making Directory.")
-                    self.projects[name] = {"path": "{0}/{1}".format(self.base_path[1], name), "branch": []}
-                    cmd = "cd {0}.git;".format(self.projects[name]["path"])
+                    self.projects[name+".git"] = {"path": "{0}/{1}.git".format(self.base_path[1], name), "branch": []}
+                    cmd = "cd {0};".format(self.projects[name+".git"]["path"])
                     cmd += "git init --bare;"
                     stdout, stderr = self.run(cmd)
                     if self.check_error(stderr):
@@ -100,7 +104,7 @@ class Git(ssh.SSH):
             raise AttributeError("Set Local & Fix Project First.")
 
     def init_project_local(self, name):
-        if self.if_set_local:
+        if self.if_set_local and self.if_fix_project:
             os.chdir(self.local_path)
             try:
                 os.mkdir(name)
@@ -109,14 +113,15 @@ class Git(ssh.SSH):
                 print("Local Project Already Exist.")
             os.chdir(os.path.join(self.local_path, name))
             cmd = "git init"
-            readme = open(os.path.join(self.local_path, name,"ReadME.md"),"w")
-            readme.write("#Default Project Introduction.#\n")
-            readme.close()
-            cmd += "git add *"
-            cmd += "git commit --message=\"Initial Commit\""
             os.popen(cmd)
+            readme = open(os.path.join(self.local_path, name,"ReadME.md"),"w")
+            readme.write("# Default Project Introduction.\n")
+            readme.close()
+            cmd = "git add *"
+            os.popen(cmd)
+            # self.add_remote("origin")
         else:
-            raise AttributeError("Set Local First.")
+            raise AttributeError("Set Local & Fix Project First.")
 
     def global_init_local(self):
         cmd = "git config --global user.email \"{0}\"".format(self.git_email)
@@ -127,6 +132,7 @@ class Git(ssh.SSH):
 
     def update_projects(self):
         if self.base_path[0]:
+            self.projects = {}
             stdout, stderr = self.run("ls {0}".format(self.base_path[1]))
             if self.check_error(stderr):
                 reform = re.compile("\w+")
@@ -135,6 +141,8 @@ class Git(ssh.SSH):
                     self.projects[project_name] = {"path": "{0}/{1}".format(self.base_path[1], project_name),
                                                    "branch": []}
                 self.if_get_project = True
+                if self.if_fix_project:
+                    self.get_branch()
             else:
                 raise ValueError("Base Path Abnormal")
 
@@ -145,6 +153,7 @@ class Git(ssh.SSH):
 
     def list_projects(self):
         if self.if_get_project:
+            self.projects_list = []
             for project in self.projects.keys():
                 self.projects_list.append(project)
         else:
@@ -158,6 +167,7 @@ class Git(ssh.SSH):
             os.chdir(self.local_path)
         else:
             raise AttributeError("Connect First.")
+
     def add_remote(self, name="origin"):
         if self.if_base_init and self.if_get_project and self.if_fix_project:
             stdout = os.popen("git remote add {3} ssh://{0}@{1}:{2}/{4}.git".format(self.user, self.hostname,
@@ -176,6 +186,7 @@ class Git(ssh.SSH):
         if self.if_fix_project and self.if_base_init and self.if_set_local:
             if name in self.remotes.keys():
                 os.popen("git fetch {0}".format(name))
+                print("git fetch {0}".format(name))
                 self.if_fetch_remote = True
         else:
             raise AttributeError("Set Local & Fix Project & Base Init First.")
@@ -186,11 +197,13 @@ class Git(ssh.SSH):
             for remote in os.popen("git remote -v").readlines():
                 results = ret_code.split(remote)
                 results = list(results)
+                print(results)
                 if len(results) >= 1:
                     self.remotes = {}
                     for item in results:
-                        if item[0] not in self.remotes.keys():
+                        if results[0] not in self.remotes.keys():
                             self.remotes[results[0]] = {"name": results[0], "url": results[1]}
+                            print(self.remotes[results[0]])
                     self.if_get_remote = True
         else:
             raise AttributeError("Set Local & Fix Project & Base Init First.")
@@ -215,6 +228,32 @@ class Git(ssh.SSH):
         else:
             raise AttributeError("Set Local & Fix Project & Base Init & Get Remote & Get Branches First.")
 
+    def get_changes(self):
+        if self.if_fix_project and self.if_base_init and self.if_set_local \
+                and self.if_get_remote:
+            stdout = os.popen("git status")
+            modified_ret_code = re.compile("modified:[ ]*[\w,/,.]+")
+            new_ret_code = re.compile("new file:[ ]*[\w,/,.]+")
+            changed_files = []
+
+            for line in stdout:
+                modified_tmp_ret = modified_ret_code.search(line)
+                new_tmp_ret = new_ret_code.search(line)
+                if modified_tmp_ret is not None:
+                    modified_file = modified_tmp_ret.group()
+                    print(modified_file)
+                    changed_files.append(modified_file)
+                elif new_tmp_ret is not None:
+                    new_file = new_tmp_ret.group()
+                    print(new_file)
+                    changed_files.append(new_file)
+
+
+            return changed_files
+
+        else:
+            raise AttributeError("Set Local & Fix Project & Base Init & Get Remote & Get Branches First.")
+
     def fix_project(self, name):
         if self.if_get_project and self.if_base_init:
             if name+".git" in self.projects_list:
@@ -231,7 +270,7 @@ class Git(ssh.SSH):
     def commit_local(self, message):
         if self.if_set_local and self.if_fix_local and self.if_base_init:
             if self.base_path[0]:
-                stdout = os.popen("git commit --message={0}".format(message)).read()
+                stdout = os.popen("git commit --message=\"{0}\"".format(message)).read()
                 return stdout
             else:
                 raise UnboundLocalError("Init Base First")
@@ -240,7 +279,7 @@ class Git(ssh.SSH):
 
     def add(self):
         if self.if_set_local and self.if_fix_local and self.if_base_init:
-            stdout = os.popen("git add *")
+            stdout = os.popen("git add *").read()
             return stdout
         else:
             raise AttributeError("Set Local & Fix Local & Base Init First.")
@@ -259,6 +298,13 @@ class Git(ssh.SSH):
             self.if_get_branches = True
         else:
             raise AttributeError("Get Project & Base Init & Fix Local First.")
+
+    def status(self):
+        if self.fix_name and self.if_fix_local and self.if_base_init:
+            stdout = os.popen("git status").read()
+            return stdout
+        else:
+            raise AttributeError("Fix Project & Base Init & Fix Local First.")
 
     def list_branch(self):
         if self.if_get_branches:

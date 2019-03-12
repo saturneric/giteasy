@@ -15,16 +15,26 @@ class Key(ssh.SSH):
         self.public_key = None
 
     def add_key(self):
-        self.run("echo \"{0}\" >> ~/.ssh/authorized_keys".format(self.public_key))
+        stdout, stderr = self.run("echo \"{0}\" >> ~/.ssh/authorized_keys".format(self.public_key))
+        return stdout
 
     @staticmethod
     def create_key():
-        ret_code = subprocess.Popen(["ssh-keygen", "-b 4096"], shell=True,
+        if os.path.exists(os.path.join(os.environ["HOME"],".ssh","id_rsa.pub")):
+            os.remove(os.path.join(os.environ["HOME"],".ssh","id_rsa.pub"))
+            os.remove(os.path.join(os.environ["HOME"], ".ssh", "id_rsa"))
+
+        print("Key Path:","{0}".format(os.path.join(os.environ["HOME"],".ssh","id_rsa")))
+        ret_code = subprocess.Popen(["ssh-keygen", "-b 4096","-N ''", "-q",
+                                     "-f {0}".format(os.path.join(os.environ["HOME"],".ssh","id_rsa")),
+                                    ], shell=True,
                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, stderr = ret_code.communicate(input=b"\n \n \n \n")
+        stdout, stderr = ret_code.communicate(input=b"\ny\n")
+        return stdout.decode("utf-8")
 
     def get_key(self):
         self.public_key = open(self.public_key_path, 'r').readline()
+        return self.public_key
 
 
 if __name__ == "__main__":
