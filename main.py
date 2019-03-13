@@ -70,44 +70,45 @@ class Main(window.Window):
         self.do_connect()
 
     def do_connect(self):
-        try:
-            self.git = git.Git(hostname=self.hostname.get(),
-                               user=self.user_name.get(), passwd=self.password.get(),
-                               path="/home/git/")
-        except paramiko.ssh_exception.AuthenticationException:
-            self.connection_status["text"] = "Failed"
-            showinfo(message="Authentication failed.")
-            return
+        if self.git is None:
+            try:
+                self.git = git.Git(hostname=self.hostname.get(),
+                                   user=self.user_name.get(), passwd=self.password.get(),
+                                   path="/home/git/")
+            except paramiko.ssh_exception.AuthenticationException:
+                self.connection_status["text"] = "Failed"
+                showinfo(message="Authentication failed.")
+                return
 
-        self.connection_status["text"] = "Succeed"
+            self.connection_status["text"] = "Succeed"
 
-        try:
-            self.git.base_init()
-            self.git.update_projects()
-            self.broad.insert(INSERT, "--------------------------\n")
-            self.broad.insert(INSERT, "SSH Connection [Succeed]\n")
-            self.broad.insert(INSERT, "Hostame: "+self.hostname.get()+"\n")
-            self.broad.insert(INSERT, "User: "+self.user_name.get()+"\n")
-            if self.save_info is not None:
-                self.git.set_local(self.save_info["local_path"])
-                self.broad.insert(INSERT, "Set Local Path...OK" + "\n")
-                self.local_path_label["text"] = "Local Path:"+self.save_info["local_path"]
-
+            try:
+                self.git.base_init()
                 self.git.update_projects()
-                self.git.list_projects()
-                if self.save_info["fix_project"]+".git" in self.git.projects_list:
-                    self.broad.insert(INSERT, "--------------------------\n")
-                    self.broad.insert(INSERT, "Auto Fix Project ({0})\n".format(self.save_info["fix_project"] + ".git"))
-                    self.git.fix_project(self.save_info["fix_project"])
-                    self.fix_local_plus()
-                    self.broad.see(END)
-                    self.fix_project_label["text"] = "Fixed Project: {0}".format(self.save_info["fix_project"])
+                self.broad.insert(INSERT, "--------------------------\n")
+                self.broad.insert(INSERT, "SSH Connection [Succeed]\n")
+                self.broad.insert(INSERT, "Hostame: "+self.hostname.get()+"\n")
+                self.broad.insert(INSERT, "User: "+self.user_name.get()+"\n")
+                if self.save_info is not None:
+                    self.git.set_local(self.save_info["local_path"])
+                    self.broad.insert(INSERT, "Set Local Path...OK" + "\n")
+                    self.local_path_label["text"] = "Local Path:"+self.save_info["local_path"]
 
-            self.broad.see(END)
+                    self.git.update_projects()
+                    self.git.list_projects()
+                    if self.save_info["fix_project"]+".git" in self.git.projects_list:
+                        self.broad.insert(INSERT, "--------------------------\n")
+                        self.broad.insert(INSERT, "Auto Fix Project ({0})\n".format(self.save_info["fix_project"] + ".git"))
+                        self.git.fix_project(self.save_info["fix_project"])
+                        self.fix_local_plus()
+                        self.broad.see(END)
+                        self.fix_project_label["text"] = "Fixed Project: {0}".format(self.save_info["fix_project"])
 
-        except AttributeError as errinfo:
-            showinfo(message=errinfo)
-            return
+                self.broad.see(END)
+
+            except AttributeError as errinfo:
+                showinfo(message=errinfo)
+                return
 
     def do_list(self):
         try:
