@@ -74,8 +74,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/git.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="454">
-              <caret line="233" column="34" lean-forward="true" selection-start-line="233" selection-start-column="34" selection-end-line="233" selection-end-column="34" />
+            <state relative-caret-position="226">
+              <caret line="49" column="42" selection-start-line="49" selection-start-column="42" selection-end-line="49" selection-end-column="42" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
                 <marker date="1552496550761" expanded="true" signature="13921:14647" ph="..." />
@@ -96,7 +96,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/keygen.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
+            <state relative-caret-position="120">
               <caret line="27" column="27" selection-start-line="27" selection-start-column="27" selection-end-line="27" selection-end-column="27" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
@@ -219,8 +219,6 @@
         <option value="$PROJECT_DIR$/info.py" />
         <option value="$PROJECT_DIR$/branchmanager.py" />
         <option value="$PROJECT_DIR$/main.py" />
-        <option value="$PROJECT_DIR$/ssh.py" />
-        <option value="$PROJECT_DIR$/git.py" />
       </list>
     </option>
   </component>
@@ -480,20 +478,19 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="811" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.1509299" />
+      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.14663805" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
       <window_info anchor="bottom" id="Terminal" order="1" sideWeight="0.4985694" weight="0.32962447" />
-      <window_info active="true" anchor="bottom" id="Event Log" order="2" sideWeight="0.50214595" side_tool="true" visible="true" weight="0.32962447" />
-      <window_info anchor="bottom" id="Version Control" order="3" sideWeight="0.49785408" visible="true" weight="0.32962447" />
+      <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.50500715" side_tool="true" visible="true" weight="0.2628651" />
+      <window_info anchor="bottom" id="Version Control" order="3" sideWeight="0.4985694" weight="0.32962447" />
       <window_info anchor="bottom" id="Python Console" order="4" weight="0.3286517" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="6" />
       <window_info anchor="bottom" id="Find" order="7" weight="0.329718" />
-      <window_info anchor="bottom" id="Run" order="8" sideWeight="0.49427754" weight="0.2628651" />
+      <window_info anchor="bottom" id="Run" order="8" sideWeight="0.49499285" weight="0.2628651" />
       <window_info anchor="bottom" id="Debug" order="9" sideWeight="0.49928468" weight="0.30737135" />
       <window_info anchor="bottom" id="Cvs" order="10" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
@@ -574,17 +571,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/branchmanager.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="900">
-          <caret line="66" column="24" selection-start-line="66" selection-start-column="24" selection-end-line="66" selection-end-column="24" />
+        <state relative-caret-position="120">
+          <caret line="8" column="27" selection-start-line="8" selection-start-column="27" selection-end-line="8" selection-end-column="27" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
-            <marker date="1552415132051" expanded="true" signature="178:183" ph="..." />
-            <marker date="1552415132051" expanded="true" signature="2638:3140" ph="..." />
-            <marker date="1552415132051" expanded="true" signature="3158:3361" ph="..." />
-            <marker date="1552415132051" expanded="true" signature="3378:3493" ph="..." />
-            <marker date="1552415132051" expanded="true" signature="3519:3983" ph="..." />
-            <marker date="1552415132051" expanded="true" signature="4005:4694" ph="..." />
-            <marker date="1552415132051" expanded="true" signature="5012:5663" ph="..." />
           </folding>
         </state>
       </provider>
@@ -604,7 +594,8 @@
         <state relative-caret-position="360">
           <caret line="27" column="27" selection-start-line="27" selection-start-column="27" selection-end-line="27" selection-end-column="27" />
           <folding>
-            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#0#21#0" expanded="true" />
+            <marker date="1552409960112" expanded="true" signature="1144:1635" ph="..." />
           </folding>
         </state>
       </provider>
@@ -626,7 +617,7 @@
           <caret line="93" column="22" lean-forward="true" selection-start-line="93" selection-start-column="22" selection-end-line="93" selection-end-column="22" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
-            <marker date="1552494762449" expanded="true" signature="16338:16344" ph="..." />
+            <marker date="1552453766451" expanded="true" signature="15701:15707" ph="..." />
           </folding>
         </state>
       </provider>

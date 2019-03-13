@@ -215,15 +215,9 @@ class Git(ssh.SSH):
             self.get_branch_server()
             if name in self.remotes.keys():
                 if branch not in self.branches_server:
-                    proc = subprocess.Popen("git push -u {0} {1}".format(name, branch), stderr=subprocess.STDOUT,
-                                   stdout=subprocess.PIPE)
-                    stdout, stderr = proc.comunicate(timeout=30)
-                    return stdout.decode("utf-8")
+                    return os.popen("git push -u {0} {1}".format(name, branch)).read()
                 else:
-                    proc = subprocess.Popen("git push {0} {1}".format(name, branch), stderr=subprocess.STDOUT,
-                                          stdout=subprocess.PIPE)
-                    stdout, stderr = proc.comunicate(timeout=30)
-                    return stdout.decode("utf-8")
+                    return os.popen("git push {0} {1}".format(name, branch)).read()
             else:
                 raise ValueError("Name Abnormal")
         else:

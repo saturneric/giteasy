@@ -33,8 +33,8 @@ class SSH_Tools(window.Window,Key):
         self.broad.see(END)
 
     def do_check_key(self):
-        ret_code = subprocess.Popen("ssh -T {0}@{1}".format(self.user, self.hostname),
-                                    shell=True,
+        ret_code = subprocess.Popen("ssh -o StrictHostKeyChecking=no -T {0}@{1}".format(self.user, self.hostname),
+                                    shell=False,
                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE
                                     )
         stdout, stderr = ret_code.communicate(input=b"\x03")

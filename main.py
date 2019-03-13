@@ -18,14 +18,14 @@ class Main(window.Window):
         master.title("GitEasy")
         self.style.configure("M.MButton",)
         self.connect = None
-        self.hostname_label = Label(self, width=8)
+        self.hostname_label = Label(self, width=10)
         self.user_name_label = Label(self, width=12)
         self.password_label = Label(self, width=8)
         self.connection_status = Label(self, width=8)
         self.hostname = Entry(self, width=15)
         self.user_name = Entry(self, width=15)
         self.password = Entry(self, width=15, show="*")
-        self.list_projects = Button(self, width=12)
+        self.list_projects = Button(self, width=13)
         self.fix_project = Button(self, width=12)
         self.create_project = Button(self, width=12)
         self.broad = Text(self, width=85, height=30)
@@ -35,13 +35,13 @@ class Main(window.Window):
         self.set_local = Button(self, width=12)
         self.add_remote = Button(self, width=12)
         self.list_remote = Button(self, width=12)
-        self.clone_project = Button(self, width=12)
+        self.clone_project = Button(self, width=13)
         self.project_status = Button(self, width=12)
         self.pull = Button(self, width=12)
         self.push = Button(self, width=12)
         self.add = Button(self, width=12)
         self.commit = Button(self, width=12)
-        self.save = Button(self, width=12)
+        self.save = Button(self, width=15)
         self.ssh_tools = Button(self, width=12)
         self.info = None
         self.save_info = None
@@ -49,11 +49,11 @@ class Main(window.Window):
         self.git = None
         self.draw_widget()
 
-        if os.path.exists(os.path.join(os.environ['HOME'],"save_data.json")):
+        if os.path.exists(os.path.join(os.path.expanduser('~'),"save_data.json")):
             self.get_save_data()
 
     def get_save_data(self):
-        save_file = open(os.path.join(os.environ['HOME'],"save_data.json"),"r")
+        save_file = open(os.path.join(os.path.expanduser('~'),"save_data.json"),"r")
         json_data = save_file.readline()
         save_infos = json.loads(json_data)
         self.save_info = save_infos[0]
@@ -336,12 +336,12 @@ class Main(window.Window):
                 save_info["fix_project"] = self.git.fix_name
                 save_infos.append(save_info)
                 json_info = json.dumps(save_infos)
-                save_file = open(os.path.join(os.environ['HOME'],"save_data.json"),"w")
+                save_file = open(os.path.join(os.path.expanduser('~'),"save_data.json"),"w")
                 save_file.write(json_info)
                 save_file.close()
                 self.broad.insert(INSERT, "--------------------------\n")
                 self.broad.insert(INSERT, "Data Information Saved\n")
-                self.broad.insert(INSERT, "Path: "+os.path.join(os.environ['HOME'],"save_data.json"))
+                self.broad.insert(INSERT, "Path: "+os.path.join(os.path.expanduser('~'), "save_data.json"))
                 self.broad.see(END)
             else:
                 raise AttributeError("Please Connect And Set Local Path First.")
