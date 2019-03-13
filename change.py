@@ -25,6 +25,7 @@ class Changes(window.Window):
         self.list.bind("<<ListboxSelect>>",self.show_change)
         self.current_index = None
         self.broad = broad
+        self.list_bak = []
 
     def draw_widgets(self):
         self.list.grid(row=0, column=0)
@@ -67,45 +68,47 @@ class Changes(window.Window):
 
 
     def show_change(self, *args):
-        self.current_index = self.list.curselection()[0]
-        if self.discard_status[self.current_index]:
-            self.discard['text'] = 'Discard'
-        else:
-            self.discard['text'] = 'Add'
+        if len(self.list_bak) > 0:
+            self.current_index = self.list.curselection()[0]
+            if self.discard_status[self.current_index]:
+                self.discard['text'] = 'Discard'
+            else:
+                self.discard['text'] = 'Add'
 
-        stdout = os.popen("git diff --cached {0}".format(self.change_files[self.current_index])).read()
-        self.text.delete('1.0', END)
-        self.text.insert(INSERT,self.change_files[self.current_index]+"\n","TITLE")
-        self.text.insert(INSERT, "-----------------------------------------------\n","TITLE")
-        if_data = False
-        lines = []
-        str = ""
-        for char in stdout:
-            if char is not '\n':
-                str += char
-            else:
-                lines.append(str)
-                str = ""
-        for line in lines:
-            if line[0] is '@':
-                if_data = True
-            if line[0] is '+' and if_data:
-                self.text.insert(INSERT,line+"\n","ADD")
-            elif line[0] is '-' and if_data:
-                self.text.insert(INSERT, line + "\n", "DEL")
-            elif line[0] is '@':
-                self.text.insert(INSERT, line + "\n", "INFO")
-            else:
-                if if_data:
-                    self.text.insert(INSERT, line + "\n","DATA")
+            stdout = os.popen("git diff --cached {0}".format(self.change_files[self.current_index])).read()
+            self.text.delete('1.0', END)
+            self.text.insert(INSERT,self.change_files[self.current_index]+"\n","TITLE")
+            self.text.insert(INSERT, "-----------------------------------------------\n","TITLE")
+            if_data = False
+            lines = []
+            str = ""
+            for char in stdout:
+                if char is not '\n':
+                    str += char
                 else:
-                    self.text.insert(INSERT, line + "\n","TITLE")
+                    lines.append(str)
+                    str = ""
+            for line in lines:
+                if line[0] is '@':
+                    if_data = True
+                if line[0] is '+' and if_data:
+                    self.text.insert(INSERT,line+"\n","ADD")
+                elif line[0] is '-' and if_data:
+                    self.text.insert(INSERT, line + "\n", "DEL")
+                elif line[0] is '@':
+                    self.text.insert(INSERT, line + "\n", "INFO")
+                else:
+                    if if_data:
+                        self.text.insert(INSERT, line + "\n","DATA")
+                    else:
+                        self.text.insert(INSERT, line + "\n","TITLE")
 
-        self.text.see(END)
+            self.text.see(END)
 
     def set_list(self, list):
         for item in list:
             self.list.insert(END, item)
+            self.list_bak =list
             ret_code = re.compile(r"[:]")
             tmp_ret = ret_code.split(item)
             self.change_files.append(tmp_ret[1])

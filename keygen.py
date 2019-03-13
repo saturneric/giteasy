@@ -10,8 +10,8 @@ class Key(ssh.SSH):
         self.connect(5)
         self.pub_key = None
         self.keygen = None
-        self.local_path = "/Users/huyibing/"
-        self.public_key_path = self.local_path+".ssh/id_rsa.pub"
+        self.local_path = os.path.expanduser('~')
+        self.public_key_path = os.path.join(self.local_path, '.ssh', 'id_rsa.pub')
         self.public_key = None
 
     def add_key(self):
@@ -20,14 +20,14 @@ class Key(ssh.SSH):
 
     @staticmethod
     def create_key():
-        if os.path.exists(os.path.join(os.environ["HOME"],".ssh","id_rsa.pub")):
-            os.remove(os.path.join(os.environ["HOME"],".ssh","id_rsa.pub"))
-            os.remove(os.path.join(os.environ["HOME"], ".ssh", "id_rsa"))
+        if os.path.exists(os.path.join(os.path.expanduser('~'),".ssh","id_rsa.pub")):
+            os.remove(os.path.join(os.path.expanduser('~'),".ssh","id_rsa.pub"))
+            os.remove(os.path.join(os.path.expanduser('~'), ".ssh", "id_rsa"))
 
-        print("Key Path:","{0}".format(os.path.join(os.environ["HOME"],".ssh","id_rsa")))
+        print("Key Path:","{0}".format(os.path.join(os.path.expanduser('~'),".ssh","id_rsa")))
         ret_code = subprocess.Popen(["ssh-keygen", "-b 4096","-N ''", "-q",
-                                     "-f {0}".format(os.path.join(os.environ["HOME"],".ssh","id_rsa")),
-                                    ], shell=True,
+                                     "-f {0}".format(os.path.join(os.path.expanduser('~'),".ssh","id_rsa")),
+                                    ], shell=False,
                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = ret_code.communicate(input=b"\ny\n")
         return stdout.decode("utf-8")

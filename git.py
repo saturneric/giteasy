@@ -228,7 +228,7 @@ class Git(ssh.SSH):
             self.get_branch_server()
             if name in self.remotes.keys():
                 if branch in self.branches_server:
-                    return os.popen("git pull {0} {1}".format(name, branch)).read()
+                    return os.popen("git pull --allow-unrelated-histories {0} {1}".format(name, branch)).read()
                 else: return "Current Branch '{0}' Not Exist In Server.".format(branch)
             else:
                 raise ValueError("Remote Error")
