@@ -28,8 +28,12 @@ class Key(ssh.SSH):
         ret_code = subprocess.Popen(["ssh-keygen", "-b 4096","-N ''", "-q",
                                      "-f {0}".format(os.path.join(os.path.expanduser('~'),".ssh","id_rsa")),
                                     ], shell=False,
-                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, stderr = ret_code.communicate(input=b"\ny\n")
+                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        try:
+            stdout, stderr = ret_code.communicate(input=b"\ny\n", timeout=8)
+        except subprocess.TimeoutExpired:
+            ret_code.kill()
+            stdout, stderr =  ret_code.communicate()
         return stdout.decode("utf-8")
 
     def get_key(self):

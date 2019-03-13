@@ -122,6 +122,8 @@ class Git(ssh.SSH):
             readme.close()
             cmd = "git add *"
             os.popen(cmd)
+            cmd = "git commit --message=\"Initial Commit.\""
+            os.popen(cmd)
             # self.add_remote("origin")
         else:
             raise AttributeError("Set Local & Fix Project First.")
@@ -179,7 +181,6 @@ class Git(ssh.SSH):
             self.remotes[name] = {"name": name,
                                   "url": "ssh://{0}@{1}:{2}/{3}.git".format(self.user, self.hostname, self.base_path[1],
                                                                             self.fix_name)}
-
             self.if_get_remote = True
             return stdout
         else:
@@ -215,9 +216,17 @@ class Git(ssh.SSH):
             self.get_branch_server()
             if name in self.remotes.keys():
                 if branch not in self.branches_server:
-                    return os.popen("git push -u {0} {1}".format(name, branch)).read()
+                    proc = subprocess.Popen("git push -u {0} {1}".format(name, branch), shell=True,
+                                            stderr=subprocess.STDOUT,
+                                            stdout=subprocess.PIPE)
+                    stdout, stderr = proc.communicate(timeout=30)
+                    return stdout.decode("utf-8")
                 else:
-                    return os.popen("git push {0} {1}".format(name, branch)).read()
+                    proc = subprocess.Popen("git push {0} {1}".format(name, branch), shell=True,
+                                            stderr=subprocess.STDOUT,
+                                            stdout=subprocess.PIPE)
+                    stdout, stderr = proc.communicate(timeout=30)
+                    return stdout.decode("utf-8")
             else:
                 raise ValueError("Name Abnormal")
         else:
@@ -231,7 +240,7 @@ class Git(ssh.SSH):
                 if branch in self.branches_server:
                     proc = subprocess.Popen(["git pull", "{0} {1}".format(name, branch)], shell=True, stderr=subprocess.STDOUT,
                                           stdout=subprocess.PIPE)
-                    stdout, stderr = proc.comunicate(timeout=30)
+                    stdout, stderr = proc.communicate(timeout=30)
                     return stdout.decode("utf-8")
                 else: return "Current Branch '{0}' Not Exist In Server.".format(branch)
             else:
@@ -277,8 +286,11 @@ class Git(ssh.SSH):
     def commit_local(self, message):
         if self.if_set_local and self.if_fix_local and self.if_base_init:
             if self.base_path[0]:
-                stdout = os.popen("git commit --message=\"{0}\"".format(message)).read()
-                return stdout
+                proc = subprocess.Popen("git commit --message=\"{0}\"".format(message), shell=True,
+                                        stderr=subprocess.STDOUT,
+                                        stdout=subprocess.PIPE)
+                stdout, stderr = proc.communicate(timeout=12)
+                return stdout.decode("utf-8")
             else:
                 raise UnboundLocalError("Init Base First")
         else:
@@ -286,8 +298,11 @@ class Git(ssh.SSH):
 
     def add(self):
         if self.if_set_local and self.if_fix_local and self.if_base_init:
-            stdout = os.popen("git add *").read()
-            return stdout
+            proc = subprocess.Popen("git add -A", shell=True,
+                                    stderr=subprocess.STDOUT,
+                                    stdout=subprocess.PIPE)
+            stdout, stderr = proc.communicate(timeout=8)
+            return stdout.decode("utf-8")
         else:
             raise AttributeError("Set Local & Fix Local & Base Init First.")
 
@@ -337,10 +352,25 @@ class Git(ssh.SSH):
 
     def status(self):
         if self.fix_name and self.if_fix_local and self.if_base_init:
-            stdout = os.popen("git status").read()
-            return stdout
+            proc = subprocess.Popen("git status", shell=True,
+                                    stderr=subprocess.STDOUT,
+                                    stdout=subprocess.PIPE)
+            stdout, stderr = proc.communicate(timeout=8)
+            return stdout.decode("utf-8")
+
         else:
             raise AttributeError("Fix Project & Base Init & Fix Local First.")
+
+    def set_ignore(self):
+        if os.path.exists(os.path.join(self.local_path, self.fix_name, ".gitignore")):
+            pass
+        else:
+            proc = subprocess.Popen("touch .gitignore", shell=True,
+                                    stderr=subprocess.STDOUT,
+                                    stdout=subprocess.PIPE)
+
+            stdout, stderr = proc.communicate(timeout=3)
+
 
     def list_branch(self):
         if self.if_get_branches:

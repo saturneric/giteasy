@@ -22,9 +22,7 @@ class SSH(object):
         self.ssh.close()
 
     def run(self, cmd):
-        print("CMD:", cmd)
         stdin, stdout, stderr = self.ssh.exec_command(cmd)
-
         stdout = list(stdout)
         stderr = list(stderr)
         return stdout, stderr

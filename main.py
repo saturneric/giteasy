@@ -9,8 +9,10 @@ from info import *
 from change import  *
 from sshtool import *
 from branchmanager import *
+from gitignore import *
 import paramiko
 
+default_pwd = os.getcwd()
 
 class Main(window.Window):
     def __init__(self, master=None):
@@ -43,6 +45,7 @@ class Main(window.Window):
         self.commit = Button(self, width=12)
         self.save = Button(self, width=15)
         self.ssh_tools = Button(self, width=12)
+        self.gitignore = Button(self, width=12)
         self.info = None
         self.save_info = None
 
@@ -386,6 +389,13 @@ class Main(window.Window):
         else:
             showinfo(message="Connect and Fix Local Project First")
 
+    def start_git_ignore(self):
+        if self.git is not None and self.git.if_fix_local:
+            self.git.set_ignore()
+            self.gitignore_interface = Gitignore(master=Tk())
+        else:
+            showinfo(message="Connect and Fix Local Project First")
+
     def draw_widget(self):
         self.hostname_label["text"] = "Hostname: "
         self.hostname_label.grid(row=0, column=0, sticky=W)
@@ -440,6 +450,10 @@ class Main(window.Window):
         # self.list_remote["command"] = self.do_list_remote
         # self.list_remote.grid(row=4, column=1)
 
+        self.gitignore["text"] = "Git Ignore"
+        self.gitignore["command"] = self.start_git_ignore
+        self.gitignore.grid(row=4, column=1)
+
         self.pull["text"] = "Pull"
         self.pull["command"] = self.do_pull
         self.pull.grid(row=3, column=0)
@@ -452,9 +466,6 @@ class Main(window.Window):
         self.add["command"] = self.do_add
         self.add.grid(row=4, column=0)
 
-        self.commit["text"] = "Commit"
-        self.commit["command"] = self.do_commit
-        self.commit.grid(row=4, column=1)
 
         self.save["text"] = "Save Information"
         self.save["command"] = self.do_save

@@ -78,13 +78,20 @@ class Branch(window.Window):
 
     def do_merge_list(self):
         stdout = os.popen("git branch --merged").read()
+        proc = subprocess.Popen("git branch --merged", shell=True,
+                                stderr=subprocess.STDOUT,
+                                stdout=subprocess.PIPE)
+        stdout, stderr = proc.communicate(timeout=3)
         self.text.insert(INSERT, "-----------------------------------\n")
         self.text.insert(INSERT, "Merged Branches\n")
-        self.text.insert(INSERT, stdout + "\n")
+        self.text.insert(INSERT, stdout.decode("utf-8") + "\n")
         self.text.insert(INSERT, "-----------------------------------\n")
         self.text.insert(INSERT, "Unmerged Branches\n")
-        stdout = os.popen("git branch --no-merged").read()
-        self.text.insert(INSERT, stdout + "\n")
+        proc = subprocess.Popen("git branch --no-merged", shell=True,
+                                stderr=subprocess.STDOUT,
+                                stdout=subprocess.PIPE)
+        stdout, stderr = proc.communicate(timeout=3)
+        self.text.insert(INSERT, stdout.decode("utf-8") + "\n")
         self.text.see(END)
 
     def do_list(self):

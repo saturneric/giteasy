@@ -49,7 +49,7 @@ class Changes(window.Window):
     def discard_change(self):
         if self.current_index is not None:
             if self.discard_status[self.current_index]:
-                os.popen("git checkout -- {0}".format(self.change_files[self.current_index]))
+                os.popen("git reset {0}".format(self.change_files[self.current_index]))
                 self.discard_status[self.current_index] = False
                 self.discard['text'] = 'Add'
             else:

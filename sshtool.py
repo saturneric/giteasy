@@ -35,9 +35,14 @@ class SSH_Tools(window.Window,Key):
     def do_check_key(self):
         ret_code = subprocess.Popen("ssh -o StrictHostKeyChecking=no -T {0}@{1}".format(self.user, self.hostname),
                                     shell=False,
-                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE
-                                    )
-        stdout, stderr = ret_code.communicate(input=b"\x03")
+                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+        try:
+            stdout, stderr = ret_code.communicate(input=b"\x03", timeout=8)
+            ret_code.send_signal(subprocess.CTRL_C_EVENT)
+        except subprocess.TimeoutExpired:
+            ret_code.kill()
+            stdout, stderr =  ret_code.communicate()
         self.broad.insert(INSERT, "--------------------------\n")
         self.broad.insert(INSERT, "{0}\n".format(stdout.decode("utf-8")))
         self.broad.see(END)
