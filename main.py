@@ -80,6 +80,19 @@ class Main(window.Window):
                 showinfo(message="Authentication failed.")
                 return
 
+            except paramiko.ssh_exception.BadHostKeyException:
+                self.connection_status["text"] = "Failed"
+                showinfo(message="Bad HostKey.")
+                return
+            except paramiko.ssh_exception.SSHException:
+                self.connection_status["text"] = "Failed"
+                showinfo(message="There was any other error connecting or establishing an SSH session.")
+                return
+            except paramiko.socket.error:
+                self.connection_status["text"] = "Failed"
+                showinfo(message="A socket error occurred while connecting.")
+                return
+
             self.connection_status["text"] = "Succeed"
 
             try:

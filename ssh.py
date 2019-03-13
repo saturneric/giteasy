@@ -2,7 +2,7 @@ import paramiko
 
 
 class SSH(object):
-    ssh = paramiko.SSHClient();
+    ssh = paramiko.SSHClient()
 
     def __init__(self, hostname, path, user, passwd=None, ssh_key=False):
         self.hostname = hostname
@@ -38,10 +38,11 @@ class SSH(object):
 
     def connect(self, timeout):
         if self.ssh_key:
-            self.ssh.connect(hostname=self.hostname, port=22, username=self.user, pkey=self.key, timeout=timeout)
+            self.ssh.connect(hostname=self.hostname, port=22, username=self.user, pkey=self.key,
+                             timeout=timeout, look_for_keys=True)
         else:
             self.ssh.connect(hostname=self.hostname, port=22, username=self.user, password=self.passwd,
-                             timeout=timeout)
+                             timeout=timeout, look_for_keys = True)
 
     def __del__(self):
         self.close()

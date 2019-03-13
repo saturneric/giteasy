@@ -1,6 +1,7 @@
 import re
 import os
 import ssh
+import subprocess
 
 
 class Git(ssh.SSH):
@@ -214,9 +215,15 @@ class Git(ssh.SSH):
             self.get_branch_server()
             if name in self.remotes.keys():
                 if branch not in self.branches_server:
-                    return os.popen("git push -u {0} {1}".format(name, branch)).read()
+                    proc = subprocess.Popen("git push -u {0} {1}".format(name, branch), stderr=subprocess.STDOUT,
+                                   stdout=subprocess.PIPE)
+                    stdout, stderr = proc.comunicate(timeout=30)
+                    return stdout.decode("utf-8")
                 else:
-                    return os.popen("git push {0} {1}".format(name, branch)).read()
+                    proc = subprocess.Popen("git push {0} {1}".format(name, branch), stderr=subprocess.STDOUT,
+                                          stdout=subprocess.PIPE)
+                    stdout, stderr = proc.comunicate(timeout=30)
+                    return stdout.decode("utf-8")
             else:
                 raise ValueError("Name Abnormal")
         else:
@@ -228,7 +235,10 @@ class Git(ssh.SSH):
             self.get_branch_server()
             if name in self.remotes.keys():
                 if branch in self.branches_server:
-                    return os.popen("git pull {0} {1}".format(name, branch)).read()
+                    proc = subprocess.Popen(["git pull", "{0} {1}".format(name, branch)], shell=True, stderr=subprocess.STDOUT,
+                                          stdout=subprocess.PIPE)
+                    stdout, stderr = proc.comunicate(timeout=30)
+                    return stdout.decode("utf-8")
                 else: return "Current Branch '{0}' Not Exist In Server.".format(branch)
             else:
                 raise ValueError("Remote Error")
