@@ -12,6 +12,7 @@ class Changes(window.Window):
         super().set_position(50,50)
         super().set_width(870)
         super().apply()
+        master.title("Changes Manager")
         self.list = Listbox(self, width=35, height=30)
         self.text = Text(self, width=75, height=35)
         self.sb = Scrollbar(self)

@@ -33,6 +33,8 @@ class Git(ssh.SSH):
         self.ssh_hostname = hostname
         self.passwd = passwd
         self.path = path
+        self.branches_server = []
+        self.current_branch_server = ""
 
     def global_init(self, git_user, git_email):
         self.git_user = git_user
@@ -141,7 +143,7 @@ class Git(ssh.SSH):
                     self.projects[project_name] = {"path": "{0}/{1}".format(self.base_path[1], project_name),
                                                    "branch": []}
                 self.if_get_project = True
-                if self.if_fix_project:
+                if self.if_fix_project and self.if_fix_local:
                     self.get_branch()
             else:
                 raise ValueError("Base Path Abnormal")
@@ -197,13 +199,11 @@ class Git(ssh.SSH):
             for remote in os.popen("git remote -v").readlines():
                 results = ret_code.split(remote)
                 results = list(results)
-                print(results)
                 if len(results) >= 1:
                     self.remotes = {}
                     for item in results:
                         if results[0] not in self.remotes.keys():
                             self.remotes[results[0]] = {"name": results[0], "url": results[1]}
-                            print(self.remotes[results[0]])
                     self.if_get_remote = True
         else:
             raise AttributeError("Set Local & Fix Project & Base Init First.")
@@ -211,8 +211,12 @@ class Git(ssh.SSH):
     def push_remote(self, name, branch):
         if self.if_fix_project and self.if_base_init and self.if_set_local \
                 and self.if_get_remote:
+            self.get_branch_server()
             if name in self.remotes.keys():
-                return os.popen("git push {0} {1}".format(name, branch)).read()
+                if branch not in self.branches_server:
+                    return os.popen("git push -u {0} {1}".format(name, branch)).read()
+                else:
+                    return os.popen("git push {0} {1}".format(name, branch)).read()
             else:
                 raise ValueError("Name Abnormal")
         else:
@@ -221,8 +225,11 @@ class Git(ssh.SSH):
     def pull_remote(self, name, branch):
         if self.if_fix_project and self.if_base_init and self.if_set_local \
                 and self.if_get_remote:
+            self.get_branch_server()
             if name in self.remotes.keys():
-                return os.popen("git pull {0} {1}".format(name, branch)).read()
+                if branch in self.branches_server:
+                    return os.popen("git pull {0} {1}".format(name, branch)).read()
+                else: return "Current Branch '{0}' Not Exist In Server.".format(branch)
             else:
                 raise ValueError("Remote Error")
         else:
@@ -241,14 +248,10 @@ class Git(ssh.SSH):
                 new_tmp_ret = new_ret_code.search(line)
                 if modified_tmp_ret is not None:
                     modified_file = modified_tmp_ret.group()
-                    print(modified_file)
                     changed_files.append(modified_file)
                 elif new_tmp_ret is not None:
                     new_file = new_tmp_ret.group()
-                    print(new_file)
                     changed_files.append(new_file)
-
-
             return changed_files
 
         else:
@@ -288,16 +291,45 @@ class Git(ssh.SSH):
         if self.if_get_project and self.if_base_init and self.if_fix_local:
             stdout = os.popen("git branch").read()
             self.projects[self.fix_name+".git"]["branch"] = []
-            reform = re.compile("\w+")
-            for branch in stdout:
-                branch_name = reform.search("*master").group().strip('\n')
-                self.projects[self.fix_name+".git"]["branch"].append(branch_name)
+            reform = re.compile("[ ]+")
+            self.projects[self.fix_name + ".git"]["active_branch"] = ""
+            lines = []
+            str = ""
+            for char in stdout:
+                if char is '\n':
+                    lines.append(str)
+                    str = ""
+                else:
+                    str += char
 
-                if '*' in str(branch):
-                    self.projects[self.fix_name+".git"]["active_branch"] = branch_name
+            for branch in lines:
+                print("Branch:",branch)
+                branch_name = reform.split(branch)
+                if branch_name[0] == '*':
+                    self.projects[self.fix_name+".git"]["active_branch"] = branch_name[1]
+                    self.projects[self.fix_name + ".git"]["branch"].append(branch_name[1])
+                else:
+                    self.projects[self.fix_name + ".git"]["branch"].append(branch_name[1])
             self.if_get_branches = True
         else:
             raise AttributeError("Get Project & Base Init & Fix Local First.")
+
+    def get_branch_server(self):
+        if self.if_connected and self.if_get_project and self.if_fix_project:
+            self.branches_server = []
+            self.current_branch_server = ""
+            stdout, stderr = self.run(self.fix_cmd+"git branch -v")
+            ret_code = re.compile(r"[ ]+")
+            for branch in stdout:
+                branches_info = ret_code.split(branch)
+                if branches_info[0] == '*':
+                    self.current_branch_server = branches_info[1]
+                    self.branches_server.append(branches_info[1])
+                else:
+                    self.branches_server.append(branches_info[1])
+
+        else:
+            raise AttributeError("Get Project & Base Init & Fix Project First.")
 
     def status(self):
         if self.fix_name and self.if_fix_local and self.if_base_init:

@@ -8,11 +8,14 @@ import window
 from info import *
 from change import  *
 from sshtool import *
+from branchmanager import *
+import paramiko
 
 
 class Main(window.Window):
     def __init__(self, master=None):
         super().__init__(master)
+        master.title("GitEasy")
         self.style.configure("M.MButton",)
         self.connect = None
         self.hostname_label = Label(self, width=8)
@@ -28,7 +31,7 @@ class Main(window.Window):
         self.broad = Text(self, width=85, height=30)
         self.fix_project_label = Label(self, width=15)
         self.local_path_label = Label(self, width=25)
-        self.get_branch = Button(self, width=12)
+        self.branches = Button(self, width=12)
         self.set_local = Button(self, width=12)
         self.add_remote = Button(self, width=12)
         self.list_remote = Button(self, width=12)
@@ -71,9 +74,13 @@ class Main(window.Window):
             self.git = git.Git(hostname=self.hostname.get(),
                                user=self.user_name.get(), passwd=self.password.get(),
                                path="/home/git/")
-        finally:
+        except paramiko.ssh_exception.AuthenticationException:
             self.connection_status["text"] = "Failed"
+            showinfo(message="Authentication failed.")
+            return
+
         self.connection_status["text"] = "Succeed"
+
         try:
             self.git.base_init()
             self.git.update_projects()
@@ -85,11 +92,14 @@ class Main(window.Window):
                 self.git.set_local(self.save_info["local_path"])
                 self.broad.insert(INSERT, "Set Local Path...OK" + "\n")
                 self.local_path_label["text"] = "Local Path:"+self.save_info["local_path"]
-                self.do_list()
+
+                self.git.update_projects()
+                self.git.list_projects()
                 if self.save_info["fix_project"]+".git" in self.git.projects_list:
-                    self.git.fix_project(self.save_info["fix_project"])
                     self.broad.insert(INSERT, "--------------------------\n")
-                    self.broad.insert(INSERT, "Auto Fix Project {0}\n".format(self.save_info["fix_project"]+".git"))
+                    self.broad.insert(INSERT, "Auto Fix Project ({0})\n".format(self.save_info["fix_project"] + ".git"))
+                    self.git.fix_project(self.save_info["fix_project"])
+                    self.fix_local_plus()
                     self.broad.see(END)
                     self.fix_project_label["text"] = "Fixed Project: {0}".format(self.save_info["fix_project"])
 
@@ -161,33 +171,33 @@ class Main(window.Window):
                 showinfo(message=errinfo)
                 return
             self.fix_project_label["text"] = "Fixed Project: {0}".format(self.info.information.get())
-            try:
-
-                if os.path.exists(os.path.join(self.git.local_path, self.git.fix_name)) and self.git.if_set_local:
-                    self.broad.insert(INSERT, "Check Local Project...OK \n")
-                else:
-                    self.do_clone_project()
-                    self.broad.insert(INSERT, "Set Local Project...OK \n")
-
-                self.do_fix_project_local()
-                self.broad.insert(INSERT, "Fix Local Project...OK \n")
-                self.git.get_remote()
-                if "origin" not in self.git.remotes.keys():
-                    self.git.add_remote("origin")
-                self.broad.insert(INSERT, "Get Local Project's Remote...OK \n")
-
-                self.git.fetch_remote("origin")
-                self.broad.insert(INSERT, "Fetch Server Project...OK \n")
-
-                self.git.get_branch()
-                self.broad.insert(INSERT, "Get Local Project's Branches...OK \n")
-
-                self.broad.see(END)
-            except AttributeError as errinfo:
-                showinfo(message=errinfo)
-                return
+            self.fix_local_plus()
             self.info.master.protocol("WM_DELETE_WINDOW", self.destroy_info)
             self.info.master.destroy()
+
+    def fix_local_plus(self):
+        try:
+            if os.path.exists(os.path.join(self.git.local_path, self.git.fix_name)) and self.git.if_set_local:
+                self.broad.insert(INSERT, "Check Local Project...OK \n")
+            else:
+                self.do_clone_project()
+                self.broad.insert(INSERT, "Set Local Project...OK \n")
+
+            self.do_fix_project_local()
+            self.broad.insert(INSERT, "Fix Local Project...OK \n")
+            self.git.get_remote()
+            if "origin" not in self.git.remotes.keys():
+                self.git.add_remote("origin")
+            self.broad.insert(INSERT, "Get Local Project's Remote...OK \n")
+
+            self.git.fetch_remote("origin")
+            self.broad.insert(INSERT, "Fetch Server Project...OK \n")
+            self.git.get_branch()
+            self.broad.insert(INSERT, "Get Local Project's Branches...OK \n")
+            self.broad.see(END)
+        except AttributeError as errinfo:
+            showinfo(message=errinfo)
+            return
 
     def do_get_branch(self):
         try:
@@ -262,8 +272,10 @@ class Main(window.Window):
 
     def do_pull(self):
         try:
-            stdout = self.git.pull_remote("origin", "master")
+            self.git.get_branch()
+            stdout = self.git.pull_remote("origin", self.git.projects[self.git.fix_name+".git"]["active_branch"])
             self.broad.insert(INSERT, "--------------------------\n")
+            self.broad.insert(INSERT, "Pull Action\n")
             self.broad.insert(INSERT, "{0}\n".format(stdout))
             self.broad.see(END)
         except AttributeError as errinfo:
@@ -272,8 +284,11 @@ class Main(window.Window):
 
     def do_push(self):
         try:
-            stdout = self.git.push_remote("origin", "master")
+            self.git.get_branch()
+            print("Active Branch:",self.git.projects[self.git.fix_name+".git"]["active_branch"])
+            stdout = self.git.push_remote("origin", self.git.projects[self.git.fix_name+".git"]["active_branch"])
             self.broad.insert(INSERT, "--------------------------\n")
+            self.broad.insert(INSERT, "Push Action\n")
             self.broad.insert(INSERT, "{0}\n".format(stdout))
             self.broad.see(END)
         except AttributeError as errinfo:
@@ -313,6 +328,7 @@ class Main(window.Window):
                 self.broad.insert(INSERT, "--------------------------\n")
                 self.broad.insert(INSERT, "Data Information Saved\n")
                 self.broad.insert(INSERT, "Path: "+os.path.join(os.environ['HOME'],"save_data.json"))
+                self.broad.see(END)
             else:
                 raise AttributeError("Please Connect And Set Local Path First.")
         except AttributeError as errinfo:
@@ -350,6 +366,12 @@ class Main(window.Window):
         else:
             showinfo(message="Connect First")
 
+    def start_branch_manager(self):
+        if self.git is not None and self.git.if_fix_local:
+            self.branch_interface = Branch(master=Tk())
+        else:
+            showinfo(message="Connect and Fix Local Project First")
+
     def draw_widget(self):
         self.hostname_label["text"] = "Hostname: "
         self.hostname_label.grid(row=0, column=0, sticky=W)
@@ -384,9 +406,9 @@ class Main(window.Window):
         self.local_path_label["text"] = "Local Path: None"
         self.local_path_label.grid(row=9, column=0, columnspan=2, sticky=W)
 
-        # self.get_branch["text"] = "Get Branch"
-        # self.get_branch["command"] = self.do_get_branch
-        # self.get_branch.grid(row=3,column=0)
+        self.branches["text"] = "Branches"
+        self.branches["command"] = self.start_branch_manager
+        self.branches.grid(row=2,column=1)
 
         self.set_local["text"] = "Set Local Path"
         self.set_local["command"]  = self.do_set_local
@@ -439,6 +461,6 @@ if __name__ == "__main__":
     root = Tk()
     main = Main(root)
     main.set_width(930)
-    main.set_height(530)
+    main.set_height(560)
     main.apply()
     main.mainloop()

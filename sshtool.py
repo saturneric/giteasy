@@ -9,6 +9,7 @@ import window
 class SSH_Tools(window.Window,Key):
     def __init__(self, hostname, user, passwd, path, master=None, broad=None):
         window.Window.__init__(self,master)
+        master.title("SSH Manager")
         Key.__init__(self,hostname=hostname, user=user, password=passwd, path=path)
         self.broad = broad
         self.hostname = hostname

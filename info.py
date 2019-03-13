@@ -4,8 +4,9 @@ from tkinter.messagebox import *
 import window
 
 class Info(window.Window):
-    def __init__(self, master=None, type="Entry"):
+    def __init__(self, master=None, type="Entry", title = "INFO"):
         super().__init__(master)
+        master.title(title)
         if type is "Combobox":
             info_type = Combobox(self)
         else:
@@ -14,6 +15,7 @@ class Info(window.Window):
         self.information = info_type
         self.ok = Button(self)
         self.draw_widgets()
+        self.master = master
 
     def draw_widgets(self):
         self.information_label["text"] = "Info: "
